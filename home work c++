@@ -1,0 +1,129 @@
+/******************************************************************************
+
+                              Online C++ Compiler.
+               Code, Compile, Run and Debug C++ program online.
+Write your code in this editor and press "Run" button to compile and execute it.
+
+*******************************************************************************/
+
+#include <iostream>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+
+//--------------------------------------------
+// LU Decomposition (Without using libraries)
+//--------------------------------------------
+void luDecomposition(vector<vector<double>>& A, vector<vector<double>>& L, vector<vector<double>>& U) {
+    int n = A.size();
+
+    // Initialize L as Identity and U as A
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            L[i][j] = (i == j) ? 1.0 : 0.0;
+            U[i][j] = A[i][j];
+        }
+    }
+
+    // LU Decomposition
+    for (int k = 0; k < n; k++) {
+        if (abs(U[k][k]) < 1e-9) {
+            cout << "Zero pivot encountered!" << endl;
+            return;
+        }
+
+        for (int i = k + 1; i < n; i++) {
+            double factor = U[i][k] / U[k][k];
+            L[i][k] = factor;
+
+            for (int j = k; j < n; j++) {
+                U[i][j] -= factor * U[k][j];
+            }
+        }
+    }
+}
+
+//--------------------------------------------
+// Forward substitution: L * Y = B
+//--------------------------------------------
+vector<double> forwardSubstitution(vector<vector<double>>& L, vector<double>& B) {
+    int n = B.size();
+    vector<double> Y(n, 0);
+
+    for (int i = 0; i < n; i++) {
+        double sum = 0;
+        for (int j = 0; j < i; j++)
+            sum += L[i][j] * Y[j];
+
+        Y[i] = B[i] - sum;
+    }
+    return Y;
+}
+
+//--------------------------------------------
+// Backward substitution: U * X = Y
+//--------------------------------------------
+vector<double> backwardSubstitution(vector<vector<double>>& U, vector<double>& Y) {
+    int n = Y.size();
+    vector<double> X(n, 0);
+
+    for (int i = n - 1; i >= 0; i--) {
+        double sum = 0;
+        for (int j = i + 1; j < n; j++)
+            sum += U[i][j] * X[j];
+
+        X[i] = (Y[i] - sum) / U[i][i];
+    }
+    return X;
+}
+
+//--------------------------------------------
+// MAIN
+//--------------------------------------------
+int main() {
+    // Example from your sheet
+    vector<vector<double>> A = {
+        {2, -1, 1},
+        {3,  3, 9},
+        {3,  3, 5}
+    };
+
+    vector<double> B = {2, -1, 4};
+
+    int n = A.size();
+
+    vector<vector<double>> L(n, vector<double>(n, 0));
+    vector<vector<double>> U(n, vector<double>(n, 0));
+
+    // Perform LU factorization
+    luDecomposition(A, L, U);
+
+    // Solve LY = B
+    vector<double> Y = forwardSubstitution(L, B);
+
+    // Solve UX = Y
+    vector<double> X = backwardSubstitution(U, Y);
+
+    // Output
+    cout << fixed << setprecision(3);
+
+    cout << "Solution X:\n";
+    for (double x : X) cout << x << " ";
+    cout << "\n\n";
+
+    cout << "Matrix L:\n";
+    for (auto& row : L) {
+        for (double v : row) cout << v << " ";
+        cout << "\n";
+    }
+    cout << "\n";
+
+    cout << "Matrix U:\n";
+    for (auto& row : U) {
+        for (double v : row) cout << v << " ";
+        cout << "\n";
+    }
+
+    return 0;
+}
